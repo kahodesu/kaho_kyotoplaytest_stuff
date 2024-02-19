@@ -1,13 +1,7 @@
-/*
- * MIDIUSB_test.ino
- *
- * Created: 4/6/2015 10:47:08 AM
- * Author: gurbrinder grewal
- * Modified by Arduino LLC (2015)
- */ 
+/* PROOF OF CONCEPT FOR KYOTOPLAYTEST INSTALLATION*/ 
 
 #include "MIDIUSB.h"
-
+//int sv = 0;
 // First parameter is the event type (0x09 = note on, 0x08 = note off).
 // Second parameter is note-on/note-off, combined with the channel.
 // Channel can be anything between 0-15. Typically reported to the user as 1-16.
@@ -25,7 +19,7 @@ void noteOff(byte channel, byte pitch, byte velocity) {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 }
 
 // First parameter is the event type (0x0B = control change).
@@ -39,46 +33,40 @@ void controlChange(byte channel, byte control, byte value) {
 }
 
 void loop() {
-  /*
-  int sensorValue = analogRead(A0); //reading pot
-  int sv = map(sensorValue, 0, 1023, 0, 127);
-  delay(100);
 
-  Serial.println("Sending note on");
-  noteOn(0, sv, 64);   // Channel 0, middle C, normal velocity
-  MidiUSB.flush();
-  delay(500);
-  Serial.println("Sending note off");
-  noteOff(0, sv, 64);  // Channel 0, middle C, normal velocity
-  MidiUSB.flush();
-  delay(5); */
+  // Serial.println(sv);
+  // delay(100);
 
-  Serial.println("Sending note on");
-  noteOn(0, 48, 64);   // Channel 0, middle C, normal velocity
-  MidiUSB.flush();
-  delay(500);
-  Serial.println("Sending note off");
-  noteOff(0, 48, 64);  // Channel 0, middle C, normal velocity
-  MidiUSB.flush();
-  delay(1500);
+  // Serial.println("Sending note on");
+  // noteOn(0, sv, 64);   // Channel 0, middle C, normal velocity
+  // MidiUSB.flush();
+  // delay(500);
+  // Serial.println("Sending note off");
+  // noteOff(0, sv, 64);  // Channel 0, middle C, normal velocity
+  // MidiUSB.flush();
+  // delay(500); 
+  
+// sv = sv + 1;
 
+//for (int i = 30; i <= 39; i++) {
   Serial.println("Sending note on");
-  noteOn(0, 54, 64);   // Channel 0, middle C, normal velocity
+  noteOn(0, 37, 64);   // Channel 0, middle C, normal velocity
   MidiUSB.flush();
-  delay(500);
+  delay(1000);
   Serial.println("Sending note off");
-  noteOff(0, 54, 64);  // Channel 0, middle C, normal velocity
+  noteOff(0, 37, 64);  // Channel 0, middle C, normal velocity
   MidiUSB.flush();
   delay(1500);
 
     Serial.println("Sending note on");
-  noteOn(0, 44, 64);   // Channel 0, middle C, normal velocity
+  noteOn(0, 54, 50);   // Channel 0, middle C, normal velocity
   MidiUSB.flush();
   delay(500);
   Serial.println("Sending note off");
-  noteOff(0, 44, 64);  // Channel 0, middle C, normal velocity
+  noteOff(0, 54, 50);  // Channel 0, middle C, normal velocity
   MidiUSB.flush();
   delay(1500);
+  
 
-//controlChange(0, 10, 65); // Set the value of controller 10 on channel 0 to 65
+  //controlChange(0, 10, 65); // Set the value of controller 10 on channel 0 to 65
 }
