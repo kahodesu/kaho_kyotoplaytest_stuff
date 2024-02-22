@@ -35,21 +35,22 @@ void readMe(){
 
 
 void tapHold() { 
-  if (value >= initThreshold) { //if no contact
+  //NO CONTACT
+  if (value >= initThreshold) {
     if (!tapHoldTimer.isReady() && tapHoldFlag == true){ //first check if there was contact before
       Serial.println("tap!");  
-      return;
     }
   tapHoldFlag = false;
   return;
   }
+  //  CONTACT 
   else if (value < initThreshold) { //if there is contact
     if (tapHoldFlag == false) { //this happens once at the beginning of contact
       tapHoldTimer.reset();
       tapHoldTimer.setInterval(tapHoldThreshold);
       tapHoldFlag = true;
-      return;
       Serial.println("timer started!"); 
+      return;
     }
     else if (tapHoldFlag == true){
       if (tapHoldTimer.isReady()){
@@ -57,6 +58,7 @@ void tapHold() {
         return;
       }
       Serial.println("--");
+      return;
     }
   }
 }
