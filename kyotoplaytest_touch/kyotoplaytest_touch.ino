@@ -6,6 +6,9 @@
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////LIBRARIES///////////////////////
+#include "Timer.h"
+#include "MIDIUSB.h"
 
 /////////////////////VARIABLES///////////////////////
 const int initThreshold = 1014;  // when you want to start calculating values
@@ -30,6 +33,10 @@ int seat2State = 0;
 short value = 0;
 bool lastContactState = false; 
 
+//timers
+Timer tapHoldTimer(1000); 
+bool tapHoldFlag = false; 
+
 //LOOP MODE. Loops I need: intro, mood, harmonic, fill, outro
 #define NOTHING 0
 #define INTRO 1
@@ -38,6 +45,7 @@ bool lastContactState = false;
 #define FILL 4
 #define OUTRO 5
 #define SECRET 6
+
 int loopMode = NOTHING;
 
 ///////////////////// FUNCTIONS ///////////////////////
@@ -95,19 +103,38 @@ bool sittingState() { //for this to be true both cushions have to be sat upon
   }
 }
 
-//function checks if users are holding hands
-bool contactState() { 
-  if (value < initThreshold) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
 // function checks if it is a tap or a hold
 // fuck, i need to figure out a way of recognizing if it is a tap or hold
 void tapHold() { 
+   if (value < initThreshold) { //if there is contact
+    if ( tapHoldFlag == false) { //this happens at the beginning
+      tapHoldFlag = true;
+      tapHoldTimer.start();
+    }    
+    else {
+      if(timer.state() == STOPPED) {
+        //it is a hold;
+      }
+  else { //if there is no contact
+     
+
+
+  }
+      //check the timer is still going on
+      //otherwise it is a tap!
+    }
+  
+  
+   }
+
+   
+    //during the first time, start timer
+    //if it's the second time then just keep in mind what was happening before
+    //if status changes before time runs out then it's a tap
+    //otherwise it is a hold. 
+   
+  }
+
   // first recognize when there is initial contact/circuit
   // start a timer
   // just need to know last loop had contact and then checks for contact this time around
