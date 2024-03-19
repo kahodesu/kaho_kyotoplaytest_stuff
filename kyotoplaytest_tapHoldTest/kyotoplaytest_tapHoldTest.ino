@@ -1,10 +1,10 @@
 #include "SimpleTimer.h"
 
 /////////////////////VARIABLES///////////////////////
-const int initThreshold = 1014;  // when you want to start calculating values
+const int initThreshold = 1000;  // when you want to start calculating values
 const int loopDelay = 100; //how long you want the delay at the end of the loop
 const int triggerEnd = 100;         //how long it might take
-const int tapHoldThreshold = 300;
+const int tapHoldThreshold = 350; //300
 
 //threshholds for loop modes
 const int introThreshold = 1000;
@@ -37,28 +37,32 @@ void readMe(){
 void tapHold() { 
   if (value >= initThreshold) { //if no contact
     if (!tapHoldTimer.isReady() && tapHoldFlag == true){ //first check if there was contact before
-      Serial.println("tap!");  
-      return;
+      //Serial.println("tap!");  
+      Serial.write(1);
     }
   tapHoldFlag = false;
   return;
   }
   else if (value < initThreshold) { //if there is contact
+    //Serial.println(value);
     if (tapHoldFlag == false) { //this happens once at the beginning of contact
       tapHoldTimer.reset();
       tapHoldTimer.setInterval(tapHoldThreshold);
       tapHoldFlag = true;
-      return;
-      Serial.println("timer started!"); 
+      //return;
+      //Serial.println("timer started!"); 
     }
     else if (tapHoldFlag == true){
       if (tapHoldTimer.isReady()){
-        Serial.println("holding");
-        return;
+        //Serial.println("holding");
+       Serial.write(2);
+        return;       
       }
-      Serial.println("--");
+      //Serial.println("--");
+      return;
     }
-  }
+     
+  } 
 }
 
 
