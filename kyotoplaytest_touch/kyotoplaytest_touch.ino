@@ -1,144 +1,109 @@
-////////////////////////////////////////////////////////////////////////////////////////
-//                                TOUCH by Kaho Abe                                   //
-// this code is for the kyotoplaytest installation                                    //
-// reference circuit: https://www.instructables.com/Make-a-Musical-Bench-1/           //
-//                                                                                    //
-//                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////LIBRARIES///////////////////////
-
 #include "MIDIUSB.h"
+#include <arduino-timer.h>
 #include "SimpleTimer.h"
 
-/////////////////////VARIABLES///////////////////////
-const int initThreshold = 1014;  // when you want to start calculating values
-const int loopDelay = 10; //how long you want the delay at the end of the loop
-const int triggerEnd = 100;         //how long it might take
+auto timer = timer_create_default();
+const int melodyNotes[] = {0, 1, 2, 3, 4};
+const int melodyVelocity[] = {0, 0, 0, 0, 0};
+const int loopNotes[] = {0, 1, 2, 3, 4};
+const int loopNotesVelocity[] = {127, 127, 127, 127, 127};
+const int loop_length = 12000;
 
-//threshholds for loop modes
-const int introThreshold = 1000;
-const int moodThreshold = 900;
-const int harmonicThreshold = 800;
-const int fillThreshold = 600;
-const int secretThreshold = 0;// 0 to 599
+/////////////////////VARIABLES///////////////////////
+const int initThreshold = 600;  // when you want to start calculating values
+const int loopDelay = 100; //how long you want the delay at the end of the loop
+
+const int triggerEnd = 100;         //how long it might take
+const int tapHoldThreshold = 300; //300
+
 
 //pins
 const int tablePin = A0; //the reading pin for the table
-const int seat1Pin = 22; //the pin for the cushion
-const int seat2Pin = 23; //the pin for the other cushion
 //const int resetPin = ; //the pin to reset the Arduino
 
-int seat1State = 0;
-int seat2State = 0; 
 short value = 0;
-bool lastContactState = false; 
 
 //timers
 SimpleTimer tapHoldTimer; 
 bool tapHoldFlag = false; 
 
-//LOOP MODE. Loops I need: intro, mood, harmonic, fill, outro
-#define NOTHING 0
-#define INTRO 1
-#define MOOD 2
-#define HARMONIC 3
-#define FILL 4
-#define OUTRO 5
-#define SECRET 6
-
-int loopMode = NOTHING;
-
-///////////////////// FUNCTIONS ///////////////////////
-void timer() {
-//https://github.com/sstaub/Timer installed this... 
-//probably need two kind of timers
-
-// ---- timer for the ending the experience when it is abandoned
-//if the seats were occupied but are no longer occupied, 
-//and a certain amount of time has passed
-//then go to outro and shut down sound
-//reset arduino
-
-//--- timer for ending when engaged for a long time in a holding state
-//Also if there is a long hold and the long hold continues
-//go thru all the stages
-//and then if it's is past a max then go to outro and shut down sound
-//reset arduino
-//i think this part has to do with a certain total amount of time in a long hold maybe? 
+void midiNoteOn(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
+  MidiUSB.sendMIDI(noteOn);
 }
 
-
-//function to see how much free memory there is available on chip
-//i am worried about running out of memory and if i need to set up a reset program after each use, etc. 
-// FOR DEBUGGING - uncomment later! //
-int freeRam () {
-  extern int __heap_start, *__brkval; 
-  int v; 
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+void midiNoteOff(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
+  MidiUSB.sendMIDI(noteOff);
 }
 
-//function to read all the sensors
+bool run_samples(void *) {
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // toggle the LED 
+  for (int i = 0; i < 5; i++) {
+  
+  midiNoteOn(0, melodyNotes[i], melodyVelocity[i]); // Melody on channel 0
+  MidiUSB.flush();
+  }
+  return true; // repeat? true
+}
+
 void readMe(){ 
   value = analogRead(A0);
-  seat1State = digitalRead(seat1Pin);
-  seat2State = digitalRead(seat2Pin);
-  
-  // FOR DEBUGGING - uncomment later! //
-  Serial.print("seats: " + seat1State);
-  Serial.print("\t" + seat2State);
-  Serial.print("\t sensor: " + value); // to see what the values are in serial monitor
-  Serial.print("\t");
-
-  Serial.print("Free RAM: ");
-  Serial.println(freeRam());
+  //Serial.println(value);
 }
 
-//function returns true if both people are sitting
-bool sittingState() { //for this to be true both cushions have to be sat upon
-  if (seat1State == 1 && seat2State == 1){
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
-// function checks if it is a tap or a hold
-// fuck, i need to figure out a way of recognizing if it is a tap or hold
 void tapHold() { 
-   if (value < initThreshold) { //if there is contact
+  //NO CONTACT
+
+  if (value >= initThreshold) {
+    if (!tapHoldTimer.isReady() && tapHoldFlag == true){ //first check if there was contact before
+
+      //================Serial.println("tap!");  
+
+
+    }
+  tapHoldFlag = false;
+  return;
+  }
+  //  CONTACT 
+  else if (value < initThreshold) { //if there is contact
+    //Serial.println(value);
     if (tapHoldFlag == false) { //this happens once at the beginning of contact
-      tapHoldFlag = true;
-      tapHoldTimer.setInterval(1000);
-    }
-    else { //if this is not the first time for contact
-      if (secondTimer.isReady()){
-        Serial.print("holding");
-      }
-  else{
-    if (!secondTimer.isReady()&& tapHoldFlag == true){
-      Serail.print("tap!");
       tapHoldTimer.reset();
-       tapHoldFlag = false;
+      tapHoldTimer.setInterval(tapHoldThreshold);
+      tapHoldFlag = true;
+      //return;
+      //Serial.println("timer started!"); 
+
+      //=============Serial.println("timer started!"); 
+      return;
+
     }
-  }   
+    else if (tapHoldFlag == true){
+      if (tapHoldTimer.isReady()){
+        //==============Serial.println("holding");
+       midiNoteOn(0, melodyNotes[2], melodyVelocity[127]); // Melody on channel 0
+        MidiUSB.flush();
+       midiNoteOn(0, melodyNotes[3], melodyVelocity[127]); // Melody on channel 0
+        MidiUSB.flush();
+        return;       
+      }
+
+      return;
+    }
+     
+  } 
 }
 
-
-///////////////////// SETUP ///////////////////////
 void setup() { //happens once at the beginning of the program. 
   Serial.begin(115200);
   pinMode(tablePin, INPUT); //table pads
-  pinMode(seat1Pin, INPUT); //cushion 1 
-  pinMode(seat2Pin, INPUT); //cushion 2
+  timer.every(loop_length, run_samples);
 }
-///////////////////// LOOP ///////////////////////
+
 void loop() { //happens over and over again 
   readMe();
- // if (value < initThreshold) 
-  delay(loopDelay);  //
-
-  //Remember the contact State for next time
-  lastContactState = sittingState();
+  tapHold();
+  timer.tick();
+  delay(loopDelay); 
 }

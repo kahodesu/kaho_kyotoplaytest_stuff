@@ -1,22 +1,34 @@
+#include "MIDIUSB.h"
+
 //ARM REST PINS
-static const uint8_t lightPins[] = {A0, A1, A2, A3}; //P1: R, L, P2: R, L
-int lightPinCount = 4;
-int lightState[] = {0,0,0,0};
+static const uint8_t lightPins[] = {A0, A1}; //P1: R, L, P2: R, L
+int lightPinCount = 2;
+int lightState[] = {0,0};
 
 //CUSHIONS PINS
 int cushionPins[] = {2,3,4,5,8,9,10,11}; //P1: RF, RB, LF, LB, P2: RF, RB, LF, LB
 int cushionPinCount = 8;
 int cushionState[] = {0,0,0,0,0,0,0,0};
+int lastCushionState[] = {0,0,0,0,0,0,0,0};
 
 
 //////////////CASES////////////////
 #define REST 0 //
 #define INTRO 1 //
-#define MINIMAL 2 //
-#define FILLED 3 // 
-#define CLIMACTIC 4
+#define MINIMAL 2 
+
+void noteOn(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
+  MidiUSB.sendMIDI(noteOn);
+}
+
+void noteOff(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
+  MidiUSB.sendMIDI(noteOff);
+}
 
 void setup() {
+  Serial.begin(115200);
   for (int thisPin = 0; thisPin < cushionPinCount; thisPin++) {
     pinMode(cushionPins[thisPin], OUTPUT);
   }
@@ -26,43 +38,35 @@ void setup() {
 }
 
 void loop() {
+  // noteOn(0, 2, 127); // Melody on channel 0
+  // MidiUSB.flush();
+  // //Serial.println("boo");
+  // delay(2000);
 
   //////////////////// HANDS CHECK! /////////////////////
   //read all the photo resistors
   for (int i = 0; i < lightPinCount; i++) { 
     lightState[i] = analogRead(lightPins[i]);
+   // Serial.print ("light sensors:");
+    //Serial.println(lightState[i]);
   }
   //if the arms are on the rests then this is where everything happens!!!!!!!
-  if (lightState[0] >5 && lightState[1] >5 && lightState[2 >5 && lightState[3] >5 ){
+  if (lightState[0] < 10 && lightState[1] < 10 ){
     
     /////////// CHECK ALL THE CUSHIONS //////////////////
     for (int thisPin = 0; thisPin < cushionPinCount; thisPin++) {
-      cushionState[thisPin] = digitalRead(buttonPin);
+      cushionState[thisPin] = digitalRead(cushionPins[thisPin]);
+      if (lastCushionState[thisPin] == 0 && cushionState[thisPin] == 1) {
+        //send midi signal to play sound 
+        noteOn(0, thisPin, 127); // Melody on channel 0
+        MidiUSB.flush();
+        //delay(100);
+      }
     }
-
-    // do something different depending on the range value:
-    switch (state) {
-      case REST:  // nothing should be happening and cushions should be completely deactivated
-        Serial.println("dark");
-        break;
-      case INTRO:  //cushions should still be deactivated, but the arm rests should have triggered a beat 
-        Serial.println("dim");
-        break;
-      case MINIMAL:  // accomapniment starts, cushions should be able to trigger sounds/melody
-        Serial.println("medium");
-        break;
-      case FILLED:  // more exciting loops
-        Serial.println("bright");
-        break;
-      case CLIMACTIC:  // the most climactic loop
-        Serial.println("bright");
-        break;
-    }
-
   }
-  //if the hands are not on the rests, then demote the state to eventually go to REST state
-  else {
-    if (state>0) state --; //demote the state if the hands have left the rests, eventually it will turn off
+  for (int thisPin = 0; thisPin < cushionPinCount; thisPin++) {
+    lastCushionState[thisPin] = cushionState[thisPin];
   }
+ delay(100);
 }
 

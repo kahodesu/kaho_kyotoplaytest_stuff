@@ -5,7 +5,7 @@
 
 auto timer = timer_create_default();
 const int melodyNotes[] = {0, 1, 2, 3, 4};
-const int melodyVelocity[] = {0, 0, 0, 0, 0};
+const int melodyVelocity[] = {127, 127, 127, 127, 127};
 const int loop_length = 12000;
 
 
